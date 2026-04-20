@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCF | Advanced Student Registry</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #00ffaa;
+            --border: rgba(255, 255, 255, 0.15);
+            --error: #ff3e3e;
+            --text-dim: #ccc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none !important;
+        }
+
+        body {
+            background:
+                linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)),
+                url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=80');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #cursor-fixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--primary);
+            z-index: 10000;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            mix-blend-mode: difference;
+            transition: width 0.3s, height 0.3s;
+        }
+
+        #cursor-fixed::before {
+            content: '';
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%;
+        }
+
+        #cursor-fixed.expand {
+            width: 70px;
+            height: 70px;
+            background: rgba(0, 255, 170, 0.1);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 550px;
+            z-index: 10;
+            padding: 20px;
+        }
+
+        .form-card {
+            background: rgba(10, 10, 10, 0.55);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 40px;
+            border-radius: 18px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        }
+
+        .step-indicator {
+            font-family: 'JetBrains Mono';
+            font-size: 10px;
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .step {
+            display: none;
+            animation: slideUp 0.4s ease forwards;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-family: 'JetBrains Mono';
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        input, select {
+            width: 100%;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--border);
+            padding: 12px;
+            color: #fff;
+            font-family: 'Space Grotesk';
+            outline: none;
+            transition: 0.3s;
+            border-radius: 8px;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0,255,170,0.3);
+        }
+
+        input.invalid {
+            border-color: var(--error);
+        }
+
+        .strength-meter {
+            height: 4px;
+            background: #1a1a1a;
+            margin-top: 8px;
+            overflow: hidden;
+            border-radius: 5px;
+        }
+
+        .strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease, background 0.5s ease;
+        }
+
+        .strength-text {
+            font-family: 'JetBrains Mono';
+            font-size: 10px;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: 1px solid var(--border);
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            font-family: 'JetBrains Mono';
+            font-size: 12px;
+            transition: 0.3s;
+            border-radius: 8px;
+        }
+
+        button:hover {
+            background: var(--primary);
+            color: #000;
+        }
+
+        .btn-back {
+            flex: 0.4;
+            opacity: 0.5;
+        }
+
+        #dash {
+            display: none;
+            text-align: center;
+        }
+
+        .success-icon {
+            font-size: 50px;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="cursor-fixed"></div>
+
+<div class="container">
+    <div class="form-card" id="form-card">
+        <div class="step-indicator">
+            <span id="step-label">SECTION_01 / 05</span>
+            <span id="step-percent">20%</span>
+        </div>
+
+        <form id="mega-form">
+            <div class="step active">
+                <div class="input-group">
+                    <label>FULL_NAME</label>
+                    <input type="text" id="name" placeholder="John Doe">
+                </div>
+                <div class="input-group">
+                    <label>EMAIL_ADDRESS</label>
+                    <input type="email" id="email" placeholder="john@example.com">
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="input-group">
+                    <label>STUDENT_ID</label>
+                    <input type="text" id="sid" placeholder="GCF-2026-XXXX">
+                </div>
+                <div class="input-group">
+                    <label>DEPARTMENT</label>
+                    <select id="dept">
+                        <option value="">-- SELECT --</option>
+                        <option>CS & AI</option>
+                        <option>DATA SCIENCE</option>
+                        <option>ROBOTICS</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="input-group">
+                    <label>CREATE_PASSWORD</label>
+                    <input type="password" id="pass" placeholder="Min 8 Characters">
+                    <div class="strength-meter"><div class="strength-bar" id="s-bar"></div></div>
+                    <div class="strength-text" id="s-text">STRENGTH: NONE</div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="input-group" style="text-align:center;">
+                    <label>HUMAN_VERIFICATION</label>
+                    <h2 id="math-question" style="margin:20px 0;">12 + 5 = ?</h2>
+                    <input type="number" id="math-answer" placeholder="Your Answer">
+                </div>
+            </div>
+
+            <div class="step">
+                <label>FINAL_REVIEW</label>
+                <div id="review-data" style="font-family:'JetBrains Mono'; font-size:12px; background:rgba(0,0,0,0.5); padding:15px; border:1px solid var(--border); line-height:1.8; border-radius:8px;"></div>
+            </div>
+
+            <div class="btn-row">
+                <button type="button" class="btn-back" id="backBtn" style="display:none;">_BACK</button>
+                <button type="button" id="nextBtn">_CONTINUE</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="dash" class="form-card">
+        <div class="success-icon">✓</div>
+        <h2>DATA_UPLOAD_COMPLETE</h2>
+        <p style="margin:15px 0; color:#ccc;">Your student profile is now live in the GCF ecosystem.</p>
+        <button onclick="location.reload()">_RETURN_TO_START</button>
+    </div>
+</div>
+
+<script>
+    const cursor = document.getElementById('cursor-fixed');
+    let mX = 0, mY = 0, cX = 0, cY = 0;
+
+    window.addEventListener('mousemove', e => {
+        mX = e.clientX;
+        mY = e.clientY;
+    });
+
+    function updateCursor() {
+        cX += (mX - cX) * 0.15;
+        cY += (mY - cY) * 0.15;
+        cursor.style.transform = `translate(${cX - 20}px, ${cY - 20}px)`;
+        requestAnimationFrame(updateCursor);
+    }
+    updateCursor();
+
+    document.querySelectorAll('input, button, select').forEach(el => {
+        el.addEventListener('mouseenter', () => cursor.classList.add('expand'));
+        el.addEventListener('mouseleave', () => cursor.classList.remove('expand'));
+    });
+
+    let currentStep = 0;
+    const steps = document.querySelectorAll('.step');
+    const nextBtn = document.getElementById('nextBtn');
+    const backBtn = document.getElementById('backBtn');
+
+    let mathA, mathB, correctAnswer;
+    function generateMath() {
+        mathA = Math.floor(Math.random() * 10) + 1;
+        mathB = Math.floor(Math.random() * 10) + 1;
+        correctAnswer = mathA + mathB;
+        document.getElementById('math-question').innerText = `${mathA} + ${mathB} = ?`;
+    }
+    generateMath();
+
+    nextBtn.addEventListener('click', () => {
+        if(validateStep()) {
+            if(currentStep < steps.length - 1) {
+                steps[currentStep].classList.remove('active');
+                currentStep++;
+                steps[currentStep].classList.add('active');
+                updateUI();
+            } else {
+                document.getElementById('form-card').style.display = 'none';
+                document.getElementById('dash').style.display = 'block';
+            }
+        }
+    });
+
+    backBtn.addEventListener('click', () => {
+        steps[currentStep].classList.remove('active');
+        currentStep--;
+        steps[currentStep].classList.add('active');
+        updateUI();
+    });
+
+    function updateUI() {
+        backBtn.style.display = currentStep === 0 ? 'none' : 'block';
+        nextBtn.innerText = currentStep === steps.length - 1 ? '_FINALIZE' : '_CONTINUE';
+        document.getElementById('step-label').innerText = `SECTION_0${currentStep + 1} / 05`;
+        document.getElementById('step-percent').innerText = `${(currentStep + 1) * 20}%`;
+
+        if(currentStep === 4) {
+            document.getElementById('review-data').innerHTML = `
+                NAME: ${document.getElementById('name').value}<br>
+                EMAIL: ${document.getElementById('email').value}<br>
+                ID: ${document.getElementById('sid').value}<br>
+                DEPT: ${document.getElementById('dept').value}<br>
+                STATUS: VERIFIED_HUMAN
+            `;
+        }
+    }
+
+    function validateStep() {
+        let valid = true;
+        const fields = steps[currentStep].querySelectorAll('input, select');
+
+        fields.forEach(f => {
+            if(!f.value) {
+                f.classList.add('invalid');
+                valid = false;
+            } else {
+                f.classList.remove('invalid');
+            }
+        });
+
+        if(currentStep === 3 && parseInt(document.getElementById('math-answer').value) !== correctAnswer) {
+            valid = false;
+            generateMath();
+        }
+
+        return valid;
+    }
+</script>
+
+</body>
+</html>
